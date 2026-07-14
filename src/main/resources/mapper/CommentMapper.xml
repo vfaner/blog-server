@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rgh.mapper.CommentMapper">
+
+    <!-- CommentVo2 映射（评论 + 文章标题） -->
+    <resultMap id="CommentVo2Map" type="com.rgh.vo.CommentVo2">
+        <id property="uid" column="uid"/>
+        <result property="parentId" column="parent_id"/>
+        <result property="username" column="username"/>
+        <result property="articleId" column="article_id"/>
+        <result property="avatar" column="avatar"/>
+        <result property="link" column="link"/>
+        <result property="address" column="address"/>
+        <result property="content" column="content"/>
+        <result property="level" column="level"/>
+        <result property="like" column="like"/>
+        <result property="state" column="state"/>
+        <result property="createdTime" column="created_time"/>
+        <result property="articleName" column="article_title"/>
+    </resultMap>
+
+    <!-- 多表关联：评论列表 + 文章标题（后台管理用） -->
+    <select id="selectCommentPage" resultMap="CommentVo2Map">
+        SELECT
+            c.uid, c.parent_id, c.username, c.article_id, c.avatar, c.link,
+            c.address, c.content, c.level, c.like, c.state, c.created_time,
+            a.title AS article_title
+        FROM rgh_comment c
+        LEFT JOIN rgh_article a ON c.article_id = a.id
+        <where>
+            <if test="criteria.id != null">
+                AND c.uid = #{criteria.id}
+            </if>
+            <if test="criteria.username != null and criteria.username != ''">
+                AND c.username LIKE CONCAT('%', #{criteria.username}, '%')
+            </if>
+            <if test="criteria.articleId != null">
+                AND c.article_id = #{criteria.articleId}
+            </if>
+            <if test="criteria.content != null and criteria.content != ''">
+                AND c.content LIKE CONCAT('%', #{criteria.content}, '%')
+            </if>
+        </where>
+        ORDER BY c.created_time DESC
+    </select>
+
+</mapper>

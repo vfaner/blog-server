@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rgh.mapper.ArticleMapper">
+
+    <!-- Article 基础映射 -->
+    <resultMap id="ArticleBaseMap" type="com.rgh.entity.Article">
+        <id property="id" column="a_id"/>
+        <result property="title" column="a_title"/>
+        <result property="cover" column="a_cover"/>
+        <result property="author" column="a_author"/>
+        <result property="content" column="a_content"/>
+        <result property="state" column="a_state"/>
+        <result property="top" column="a_top"/>
+        <result property="downloadEnable" column="a_download_enable"/>
+        <result property="downloadName" column="a_download_name"/>
+        <result property="downloadUrl" column="a_download_url"/>
+        <result property="downloadSize" column="a_download_size"/>
+        <result property="downloadDesc" column="a_download_desc"/>
+        <result property="viewCount" column="a_view_count"/>
+        <result property="likeCount" column="a_like_count"/>
+        <result property="createdTime" column="a_created_time"/>
+        <result property="updatedTime" column="a_updated_time"/>
+    </resultMap>
+
+    <!-- ElTagVo 映射（分类/标签统一） -->
+    <resultMap id="ElTagVoMap" type="com.rgh.vo.ElTagVo">
+        <result property="id" column="el_id"/>
+        <result property="name" column="el_name"/>
+        <result property="type" column="el_type"/>
+    </resultMap>
+
+    <!-- Article + Categories + Tags 完整映射 -->
+    <resultMap id="ArticleVoMap" type="com.rgh.vo.ArticleVo">
+        <association property="article" resultMap="ArticleBaseMap"/>
+        <collection property="categories" ofType="com.rgh.vo.ElTagVo">
+            <id property="id" column="cate_id"/>
+            <result property="name" column="cate_name"/>
+        </collection>
+        <collection property="tags" ofType="com.rgh.vo.ElTagVo">
+            <id property="id" column="tag_id"/>
+            <result property="name" column="tag_name"/>
+        </collection>
+    </resultMap>
+
+    <!-- 多表关联查询：文章 + 分类 + 标签 -->
+    <select id="selectArticleVoById" resultMap="ArticleVoMap">
+        SELECT
+            a.id AS a_id, a.title AS a_title, a.cover AS a_cover, a.author AS a_author,
+            a.content AS a_content, a.state AS a_state, a.top AS a_top,
+            a.download_enable AS a_download_enable, a.download_name AS a_download_name,
+            a.download_url AS a_download_url, a.download_size AS a_download_size, a.download_desc AS a_download_desc,
+            a.view_count AS a_view_count, a.like_count AS a_like_count,
+            a.create_time AS a_created_time, a.update_time AS a_updated_time,
+            c.id AS cate_id, c.name AS cate_name,
+            t.id AS tag_id, t.name AS tag_name
+        FROM rgh_article a
+        LEFT JOIN rgh_article_category ac ON a.id = ac.article_id
+        LEFT JOIN rgh_category c ON ac.category_id = c.id
+        LEFT JOIN rgh_article_tag at ON a.id = at.article_id
+        LEFT JOIN rgh_tag t ON at.tag_id = t.id
+        WHERE a.id = #{id}
+    </select>
+
+    <!-- 批量查询：文章 + 分类 -->
+    <select id="selectCategoryIdsByArticleIds" resultType="java.util.Map">
+        SELECT ac.article_id AS articleId, ac.category_id AS categoryId, c.name AS categoryName
+        FROM rgh_article_category ac
+        LEFT JOIN rgh_category c ON ac.category_id = c.id
+        WHERE ac.article_id IN
+        <foreach collection="articleIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <!-- 批量查询：文章 + 标签 -->
+    <select id="selectTagIdsByArticleIds" resultType="java.util.Map">
+        SELECT at2.article_id AS articleId, at2.tag_id AS tagId, t.name AS tagName
+        FROM rgh_article_tag at2
+        LEFT JOIN rgh_tag t ON at2.tag_id = t.id
+        WHERE at2.article_id IN
+        <foreach collection="articleIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <!-- 按分类ID分页查询文章（多表） -->
+    <select id="selectArticlesByCategoryIdPage" resultMap="ArticleVoMap">
+        SELECT
+            a.id AS a_id, a.title AS a_title, a.cover AS a_cover, a.author AS a_author,
+            a.content AS a_content, a.state AS a_state, a.top AS a_top,
+            a.view_count AS a_view_count, a.like_count AS a_like_count,
+            a.create_time AS a_created_time, a.update_time AS a_updated_time,
+            c.id AS cate_id, c.name AS cate_name,
+            t.id AS tag_id, t.name AS tag_name
+        FROM rgh_article a
+        INNER JOIN rgh_article_category ac ON a.id = ac.article_id AND ac.category_id = #{categoryId}
+        LEFT JOIN rgh_category c ON ac.category_id = c.id
+        LEFT JOIN rgh_article_tag at ON a.id = at.article_id
+        LEFT JOIN rgh_tag t ON at.tag_id = t.id
+        WHERE a.state = 1
+        ORDER BY a.top DESC, a.create_time DESC
+    </select>
+
+    <!-- 按标签ID分页查询文章（多表） -->
+    <select id="selectArticlesByTagIdPage" resultMap="ArticleVoMap">
+        SELECT
+            a.id AS a_id, a.title AS a_title, a.cover AS a_cover, a.author AS a_author,
+            a.content AS a_content, a.state AS a_state, a.top AS a_top,
+            a.view_count AS a_view_count, a.like_count AS a_like_count,
+            a.create_time AS a_created_time, a.update_time AS a_updated_time,
+            c.id AS cate_id, c.name AS cate_name,
+            t.id AS tag_id, t.name AS tag_name
+        FROM rgh_article a
+        INNER JOIN rgh_article_tag at ON a.id = at.article_id AND at.tag_id = #{tagId}
+        LEFT JOIN rgh_article_category ac ON a.id = ac.article_id
+        LEFT JOIN rgh_category c ON ac.category_id = c.id
+        LEFT JOIN rgh_tag t ON at.tag_id = t.id
+        WHERE a.state = 1
+        ORDER BY a.top DESC, a.create_time DESC
+    </select>
+
+</mapper>

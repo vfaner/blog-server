@@ -1,0 +1,24 @@
+{
+  "name": "超级博客系统设置",
+  "author": "任冠华",
+  "version": "1.0.0.1",
+  "compatibility": null,
+  "title": "超级博客",
+  "keyword": "博客,技术,交流",
+  "description": "基于vue+springboot开发的一款超级博客",
+  "logo": "@/assets/images/logo.png",
+  "favicon": null,
+  "advisory": "🔥生活本来就是不断失去的过程，你所失去的不过是换了另一种方式让你重新拥有。",
+  "adv": null,
+  "card": "1",
+  "card1": "2",
+  "card2": "3",
+  "mobileNavEnable": true,
+  "mobileNavs": [
+    { "icon": "fa fa-home", "title": "首页", "link": "/index" },
+    { "icon": "fa fa-users", "title": "QQ群", "link": "javascript:;" },
+    { "icon": "fa fa-thumbs-up", "title": "本站app", "link": "javascript:;" },
+    { "icon": "fa fa-shopping-bag", "title": "QQ卡片", "link": "javascript:;" },
+    { "icon": "fa fa-user", "title": "用户中心", "link": "/user/center" }
+  ]
+}
