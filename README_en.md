@@ -32,11 +32,20 @@ If this project helps you, please give it a ⭐️ **Star** — that's the best 
 ### Article detail
 ![Article detail](./images/bk_detail.png)
 
+### Front-end user center
+![Front-end user center](./images/bk_user.png)
+
 ### Admin dashboard
 ![Admin dashboard](./images/bk_admin.png)
 
+### Admin article management
+![Article management](./images/bk_admin_wz.png)
+
 ### Admin article editor
 ![Article editor](./images/bk_admin_arth.png)
+
+### Admin role management
+![Role management](./images/bk_admin_role.png)
 
 ### Admin comment management
 ![Comment management](./images/bk_admin_comment.png)

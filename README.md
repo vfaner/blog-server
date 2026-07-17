@@ -32,11 +32,20 @@
 ### 文章详情
 ![文章详情](./images/bk_detail.png)
 
+### 前台用户中心
+![前台用户中心](./images/bk_user.png)
+
 ### 后台仪表盘
 ![后台首页](./images/bk_admin.png)
 
+### 后台文章管理
+![文章管理](./images/bk_admin_wz.png)
+
 ### 后台文章编辑
 ![文章编辑](./images/bk_admin_arth.png)
+
+### 后台角色管理
+![角色管理](./images/bk_admin_role.png)
 
 ### 后台评论管理
 ![评论管理](./images/bk_admin_comment.png)
