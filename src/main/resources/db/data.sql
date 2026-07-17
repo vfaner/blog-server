@@ -159,3 +159,9 @@ INSERT IGNORE INTO rgh_nav (id, parent_id, label, code, path, name, url, order_n
 -- 修正已存在数据（INSERT IGNORE 不会更新已有行）
 -- ============================================
 UPDATE rgh_menu SET path = '/admin/article-edit' WHERE id = 12;
+
+-- ============================================
+-- 角色-菜单权限：admin(id=1) 拥有所有菜单
+-- ============================================
+INSERT IGNORE INTO rgh_role_menu (role_id, menu_id)
+SELECT 1, id FROM rgh_menu;

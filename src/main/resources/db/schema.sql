@@ -65,6 +65,15 @@ CREATE TABLE IF NOT EXISTS rgh_user_role (
    role_id BIGINT NOT NULL COMMENT '角色Id'
 ) COMMENT='用户角色关联表';
 
+-- 角色-菜单权限关联表
+CREATE TABLE IF NOT EXISTS rgh_role_menu (
+   id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键Id，自增',
+   role_id BIGINT NOT NULL COMMENT '角色Id',
+   menu_id BIGINT NOT NULL COMMENT '菜单Id',
+   KEY idx_role_menu_role (role_id),
+   KEY idx_role_menu_menu (menu_id)
+) COMMENT='角色菜单关联表';
+
 -- 文章表
 CREATE TABLE IF NOT EXISTS `rgh_article` (
   `id` INT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
