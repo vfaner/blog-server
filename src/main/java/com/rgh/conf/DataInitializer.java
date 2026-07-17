@@ -90,6 +90,20 @@ public class DataInitializer implements CommandLineRunner {
                 System.err.println(">>> 检查/添加列 " + col + " 失败: " + e.getMessage());
             }
         });
+
+        // rgh_user 表补 email 列
+        try {
+            Integer exists = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM information_schema.COLUMNS " +
+                    "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'rgh_user' AND COLUMN_NAME = 'email'",
+                    Integer.class);
+            if (exists != null && exists == 0) {
+                jdbcTemplate.execute("ALTER TABLE rgh_user ADD COLUMN email VARCHAR(255) DEFAULT NULL COMMENT '邮箱'");
+                System.out.println(">>> 已添加列 rgh_user.email");
+            }
+        } catch (Exception e) {
+            System.err.println(">>> 检查/添加列 rgh_user.email 失败: " + e.getMessage());
+        }
     }
 
     private void resetAdminPassword() {

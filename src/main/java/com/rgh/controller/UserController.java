@@ -2,6 +2,7 @@ package com.rgh.controller;
 
 import com.rgh.constant.Constant;
 import com.rgh.entity.User;
+import com.rgh.mapper.UserRoleMapper;
 import com.rgh.service.UserService;
 import com.rgh.util.ResultUtil;
 import com.rgh.vo.PageRequest;
@@ -22,6 +23,9 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private UserRoleMapper userRoleMapper;
 
     @Operation(summary ="获取用户信息")
     @GetMapping("/getInfo")
@@ -73,7 +77,16 @@ public class UserController {
         qw.orderByAsc("id");
         com.baomidou.mybatisplus.extension.plugins.pagination.Page<com.rgh.entity.User> page =
                 new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(pageNum, pageSize);
-        return ResultUtil.success(Constant.OPERATION_FIND_SUCCESS, userService.page(page, qw));
+        com.baomidou.mybatisplus.extension.plugins.pagination.Page<com.rgh.entity.User> result = userService.page(page, qw);
+        // 填充每个用户的角色码列表（多对多，从 rgh_user_role join rgh_role.code 得到）
+        if (result.getRecords() != null) {
+            for (com.rgh.entity.User u : result.getRecords()) {
+                try {
+                    u.setRoles(userRoleMapper.findCodeByUserId(u.getId()));
+                } catch (Exception ignore) { /* 单条查询失败不影响整页返回 */ }
+            }
+        }
+        return ResultUtil.success(Constant.OPERATION_FIND_SUCCESS, result);
     }
 
     /**
@@ -83,25 +96,57 @@ public class UserController {
     public ResultUtil add(@RequestBody User user) {
         Assert.hasText(user.getUsername(), "User#name");
         Assert.isNull(user.getId(), "User#id must empty");
-//        return ResultUtil.success(Constant.OPERATION_ADD_SUCCESS, userService.insert(user));
-        return ResultUtil.success(Constant.OPERATION_ADD_SUCCESS);
+        // 密码 BCrypt 加密
+        String rawPwd = user.getPassword();
+        if (rawPwd == null || rawPwd.isEmpty()) rawPwd = "123456"; // 默认密码
+        user.setPassword(new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder().encode(rawPwd));
+        userService.save(user);
+        // 保存用户-角色关联
+        saveUserRoles(user.getId(), user.getRoleIds());
+        return ResultUtil.success(Constant.OPERATION_ADD_SUCCESS, user);
     }
 
     @RequestMapping(method = PUT, consumes = { APPLICATION_JSON_VALUE }, produces = { APPLICATION_JSON_VALUE })
     public ResultUtil update(@RequestBody User user) {
-//        Assert.hasText(user.getUsername(), "User#name");
-//        Assert.notNull(user.getId(), "id cannot empty");
-//        User user1 = userService.queryById(user.getId());
-//        user1.setUsername(user.getUsername());
-//        user1.setLoginName(user.getLoginName());
-//        user1.setUpdatedTime(new Date());
-//        if(StringUtils.isNotBlank(user.getPassword())){
-//            user1.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
-//        }
-//        user1.setAvatar(user.getAvatar());
-//        return ResultUtil.success(Constant.OPERATION_ADD_SUCCESS, userService.update(user1));
-        return ResultUtil.success(Constant.OPERATION_ADD_SUCCESS);
+        Assert.notNull(user.getId(), "id cannot empty");
+        User exist = userService.getById(user.getId());
+        Assert.notNull(exist, "用户不存在");
+        // 只更新允许修改的字段
+        exist.setNickName(user.getNickName());
+        exist.setAvatar(user.getAvatar());
+        exist.setEmail(user.getEmail());
+        if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+            exist.setPassword(new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder().encode(user.getPassword()));
+        }
+        userService.updateById(exist);
+        // 重新分配角色
+        if (user.getRoleIds() != null) {
+            saveUserRoles(user.getId(), user.getRoleIds());
+        }
+        return ResultUtil.success(Constant.OPERATION_EDIT_SUCCESS);
     }
+
+    /** 保存用户角色关联：先清空再重建 */
+    private void saveUserRoles(Integer userId, java.util.List<Integer> roleIds) {
+        if (userId == null) return;
+        try {
+            org.springframework.jdbc.core.JdbcTemplate jdbc = jdbcTemplate();
+            if (jdbc != null) {
+                jdbc.update("DELETE FROM rgh_user_role WHERE user_id = ?", userId);
+                if (roleIds != null) {
+                    for (Integer roleId : roleIds) {
+                        if (roleId != null) {
+                            jdbc.update("INSERT INTO rgh_user_role (user_id, role_id) VALUES (?, ?)", userId, roleId);
+                        }
+                    }
+                }
+            }
+        } catch (Exception ignore) { /* 静默 */ }
+    }
+
+    @Autowired(required = false)
+    private org.springframework.jdbc.core.JdbcTemplate _jdbcTemplate;
+    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate() { return _jdbcTemplate; }
 
     @GetMapping("/{id}/deletable")
     public ResultUtil deletable(@PathVariable("id") Integer id) {

@@ -22,7 +22,11 @@ public class User {
     private String avatar;
     private String role;
     private String nickName;
+    private String email;
     @TableField(exist = false)
     @Schema(hidden = true)
     private List<String> roles = new ArrayList<>();
+    @TableField(exist = false)
+    @Schema(hidden = true)
+    private List<Integer> roleIds = new ArrayList<>();
 }

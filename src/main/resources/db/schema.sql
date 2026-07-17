@@ -46,7 +46,8 @@ CREATE TABLE IF NOT EXISTS `rgh_user` (
     `password` VARCHAR(255) NOT NULL COMMENT '登录密码',
     `avatar` VARCHAR(255) COMMENT '头像',
     `role` VARCHAR(255) COMMENT '角色',
-    `nick_name` VARCHAR(255) COMMENT '昵称'
+    `nick_name` VARCHAR(255) COMMENT '昵称',
+    `email` VARCHAR(255) DEFAULT NULL COMMENT '邮箱'
     ) COMMENT='用户表';
 
 -- 角色表
